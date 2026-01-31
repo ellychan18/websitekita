@@ -46,26 +46,26 @@ const Rank = () => {
 
   return (
     <div className="pb-24 bg-[#0a0a0a] min-h-screen">
-      {/* 1. Header Ranking - Wide Style */}
-      <div className="px-3 pt-6 mb-4">
+      {/* 1. Header Ranking */}
+      <div className="px-4 pt-8 mb-4">
         <div className="flex items-center gap-2">
-          <div className="w-1 h-6 bg-red-600 rounded-full" />
-          <h1 className="text-xl font-black uppercase tracking-tight text-white">Top Ranking</h1>
+          <div className="w-1.5 h-6 bg-red-600 rounded-full shadow-[0_0_15px_rgba(220,38,38,0.6)]" />
+          <h1 className="text-2xl font-black uppercase tracking-tighter text-white italic">Top Ranking</h1>
         </div>
-        <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-bold mt-1">Drama Paling Gacor Hari Ini</p>
+        <p className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-black mt-1.5 ml-3.5">Drama Paling Gacor Hari Ini</p>
       </div>
 
-      {/* 2. Sharp Tabs Navigation */}
-      <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-md px-3 py-3 border-b border-white/5 mb-6">
-        <div className="bg-zinc-900/50 p-1 rounded-xl flex gap-1 border border-white/5">
+      {/* 2. Tabs Navigation */}
+      <div className="sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-md px-3 py-4 border-b border-white/5 mb-6">
+        <div className="bg-zinc-900/80 p-1.5 rounded-2xl flex gap-1.5 border border-white/5 shadow-2xl">
           {rankTabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 ${
                 activeTab === tab.id
-                  ? 'bg-red-600 text-white shadow-lg'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-red-600 text-white shadow-[0_8px_20px_rgba(220,38,38,0.4)] scale-[1.02]'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
               }`}
             >
               {tab.icon}
@@ -75,76 +75,81 @@ const Rank = () => {
         </div>
       </div>
 
-      {/* 3. Rank List - Wide & Sharp */}
+      {/* 3. Rank List */}
       {loading ? (
-        <div className="px-3 space-y-3">
+        <div className="px-4 space-y-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-32 bg-zinc-900/50 animate-pulse rounded-xl" />
+            <div key={i} className="h-32 bg-zinc-900/50 animate-pulse rounded-[2rem]" />
           ))}
         </div>
       ) : (
-        <div className="px-3 space-y-3">
+        <div className="px-4 space-y-5">
           {dramas.map((drama, index) => {
             const isTop3 = index < 3;
             return (
               <Link key={drama.bookId} to={`/watch/${drama.bookId}`} className="group block">
-                <div className={`relative flex gap-4 p-2.5 rounded-xl border transition-all duration-300 ${
+                <div className={`relative flex gap-5 p-3.5 rounded-[2rem] border transition-all duration-500 ${
                   isTop3 
-                  ? 'bg-zinc-900 border-red-600/20 shadow-lg' 
-                  : 'bg-zinc-900/40 border-white/5'
+                  ? 'bg-gradient-to-br from-zinc-900 via-zinc-900 to-black border-red-600/30 shadow-2xl' 
+                  : 'bg-zinc-900/20 border-white/5'
                 }`}>
                   
                   {/* Poster Area */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-20 h-28 rounded-lg overflow-hidden border border-white/5 shadow-xl">
+                    <div className="w-24 h-32 rounded-2xl overflow-hidden border border-white/10 shadow-2xl group-hover:border-red-600/50 transition-all duration-500">
                       <img 
                         src={drama.cover} 
                         alt={drama.bookName} 
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000"
                       />
                     </div>
                     
-                    {/* Rank Number Badge - Sharp Style */}
-                    <div className={`absolute -top-1.5 -left-1.5 w-7 h-7 rounded flex items-center justify-center font-black text-xs shadow-xl z-10 border ${
-                      index === 0 ? 'bg-yellow-500 border-yellow-400 text-black' :
-                      index === 1 ? 'bg-zinc-300 border-zinc-200 text-black' :
-                      index === 2 ? 'bg-orange-600 border-orange-500 text-white' :
-                      'bg-zinc-900 border-white/10 text-zinc-400'
+                    {/* Rank Number Badge - Aggressive Style */}
+                    <div className={`absolute -top-2.5 -left-2.5 w-9 h-9 rounded-xl flex items-center justify-center font-black text-[16px] shadow-2xl z-10 border-2 italic rotate-[-12deg] transition-transform group-hover:rotate-0 duration-500 ${
+                      index === 0 ? 'bg-yellow-500 border-yellow-300 text-black shadow-yellow-500/20' :
+                      index === 1 ? 'bg-zinc-300 border-zinc-100 text-black shadow-zinc-300/20' :
+                      index === 2 ? 'bg-orange-600 border-orange-400 text-white shadow-orange-600/20' :
+                      'bg-zinc-900 border-white/20 text-zinc-400'
                     }`}>
                       {index + 1}
                     </div>
                   </div>
                   
                   {/* Content Info */}
-                  <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                  <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
                     <div>
-                      {/* Full Title - No Clamp (Biar Semua Muncul) */}
-                      <h3 className="font-bold text-[13px] leading-snug text-zinc-100 group-hover:text-red-500 transition-colors">
+                      <h3 className="font-black text-[15px] leading-tight text-zinc-100 group-hover:text-red-500 transition-colors uppercase italic truncate tracking-tight">
                         {drama.bookName.trim()}
                       </h3>
-                      <p className="text-[10px] text-zinc-500 mt-1 line-clamp-2 leading-normal italic">
+                      <p className="text-[10px] text-zinc-500 mt-2 line-clamp-2 leading-relaxed font-medium italic opacity-80">
                         {drama.introduction}
                       </p>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-red-500 font-bold text-[10px]">
-                          <Users size={12} />
-                          <span>{drama.playCount} views</span>
+                    <div className="mt-4">
+                      {/* Stats Badges */}
+                      <div className="flex items-center gap-2.5 mb-3">
+                        <div className="flex items-center gap-1.5 text-red-500 font-black text-[9px] uppercase tracking-wider bg-red-500/10 px-2.5 py-1 rounded-lg border border-red-500/20">
+                          <Flame size={11} fill="currentColor" />
+                          <span>{drama.playCount}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-zinc-400 font-bold text-[10px] uppercase">
-                          <MonitorPlay size={12} />
+                        <div className="flex items-center gap-1.5 text-zinc-400 font-black text-[9px] uppercase tracking-wider bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+                          <MonitorPlay size={11} />
                           <span>{drama.chapterCount} Eps</span>
                         </div>
                       </div>
                       
-                      {/* Tags - Sharp Style */}
+                      {/* Premium Hash Tags */}
                       {drama.tags.length > 0 && (
-                        <div className="flex gap-1 overflow-hidden">
+                        <div className="flex flex-wrap gap-1.5">
                           {drama.tags.slice(0, 3).map((tag, tagIndex) => (
-                            <span key={tagIndex} className="text-[8px] font-black bg-white/5 text-zinc-500 px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-tighter">
+                            <span 
+                              key={tagIndex} 
+                              className="relative overflow-hidden flex items-center gap-1 text-[8px] font-black bg-zinc-800/50 text-zinc-300 px-2.5 py-1.5 rounded-lg border border-white/5 uppercase tracking-[0.15em] shadow-inner group/tag hover:text-white transition-colors"
+                            >
+                              <span className="text-red-600 font-black opacity-100">#</span>
                               {tag}
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover/tag:animate-[shimmer_1.5s_infinite]" />
                             </span>
                           ))}
                         </div>
@@ -152,9 +157,11 @@ const Rank = () => {
                     </div>
                   </div>
 
-                  {/* Icon Panah Kecil */}
-                  <div className="flex items-center pr-1 opacity-20 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight size={18} className="text-zinc-500" />
+                  {/* Action Icon */}
+                  <div className="flex items-center pr-1">
+                    <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-red-600 group-hover:border-red-500 group-hover:rotate-90 transition-all duration-500 shadow-xl">
+                      <ChevronRight size={20} className="text-zinc-600 group-hover:text-white" />
+                    </div>
                   </div>
                 </div>
               </Link>
@@ -162,6 +169,13 @@ const Rank = () => {
           })}
         </div>
       )}
+      
+      {/* CSS Animation for Shimmer (Optional, Tailwind handle via utility if configured) */}
+      <style>{`
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 };
