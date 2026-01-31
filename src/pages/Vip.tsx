@@ -100,30 +100,30 @@ export default function Vip() {
         </div>
       </div>
 
-      {/* 2. INPUT REDEEM GACOR */}
-      <div className="mb-12 relative">
-        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-[2.2rem] blur-xl opacity-50 group-focus-within:opacity-100 transition-opacity"></div>
-        <div className="relative bg-zinc-900/50 border border-white/10 rounded-[2rem] p-2 flex items-center backdrop-blur-xl shadow-2xl">
-          <div className="pl-5 text-yellow-500/50">
-            <Ticket size={20} />
+      {/* 2. INPUT REDEEM GACOR (FIXED OVERFLOW) */}
+      <div className="mb-12 relative px-1">
+        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-600/10 to-orange-600/10 rounded-[2.2rem] blur-xl opacity-50 group-focus-within:opacity-100 transition-opacity"></div>
+        <div className="relative bg-zinc-900/50 border border-white/10 rounded-3xl p-1.5 flex items-center backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="pl-4 text-yellow-500/50 flex-shrink-0">
+            <Ticket size={18} />
           </div>
           <input 
             type="text" 
-            placeholder="INPUT VOUCHER CODE"
+            placeholder="KODE VOUCHER"
             value={licenseInput}
             onChange={(e) => setLicenseInput(e.target.value.toUpperCase())}
             onKeyDown={(e) => e.key === 'Enter' && handleRedeem()}
-            className="flex-1 bg-transparent px-4 py-4 text-[13px] font-black tracking-[0.3em] text-yellow-500 outline-none placeholder:text-zinc-700 placeholder:tracking-normal placeholder:font-bold"
+            className="flex-1 min-w-0 bg-transparent px-3 py-4 text-[12px] font-black tracking-[0.2em] text-yellow-500 outline-none placeholder:text-zinc-700 placeholder:tracking-normal placeholder:font-bold"
           />
           <button 
             onClick={handleRedeem} 
-            className="bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest shadow-lg shadow-yellow-500/20 active:scale-95 transition-all"
+            className="flex-shrink-0 bg-yellow-500 hover:bg-yellow-400 text-black px-5 md:px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-yellow-500/20 active:scale-95 transition-all"
           >
             Redeem
           </button>
         </div>
-        <p className="text-[9px] text-center mt-4 text-zinc-600 font-bold uppercase tracking-widest">
-          Punya kode? Masukkan di atas untuk akses Premium
+        <p className="text-[9px] text-center mt-4 text-zinc-600 font-bold uppercase tracking-[0.3em] opacity-60">
+          Masukkan kode untuk akses Premium
         </p>
       </div>
 
