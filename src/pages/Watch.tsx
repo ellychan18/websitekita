@@ -8,7 +8,8 @@ import {
 import { useLanguage } from '../store/language';
 import { Helmet } from 'react-helmet-async';
 
-const VOUCHER_URL = "https://pastebin.com/raw/dtNPuFsL";
+// Menambahkan proxy 'corsproxy.io' agar browser diizinkan mengambil data dari Pastebin
+const VOUCHER_URL = "https://corsproxy.io/?https://pastebin.com/raw/dtNPuFsL";
 const SESSION_KEY = '_app_session_v2';
 
 const Watch = () => {
