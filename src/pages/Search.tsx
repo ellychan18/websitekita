@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Search as SearchIcon, X, ArrowRight, History, Flame } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search as SearchIcon, X, ArrowRight, TrendingUp, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../store/language';
 
@@ -79,83 +79,80 @@ const Search = () => {
   };
 
   return (
-    <div className="pb-24 pt-2 px-4">
-      {/* Search Input Group */}
-      <div className="relative z-[60] mb-6">
+    <div className="pb-24 pt-6 px-6 bg-[#050505] min-h-screen text-zinc-100">
+      
+      {/* 1. Search Bar Group */}
+      <div className="relative z-[60] mb-10">
         <div className="relative group">
-          <SearchIcon size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${query ? 'text-red-500' : 'text-zinc-500'}`} />
+          <SearchIcon size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 ${query ? 'text-red-500' : 'text-zinc-600'}`} />
           <input
             type="text"
             value={query}
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
-            placeholder="Cari drama favoritmu..."
-            className="w-full pl-11 pr-12 py-3.5 bg-zinc-900/80 border border-zinc-800 rounded-2xl text-white text-sm placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all backdrop-blur-sm"
+            placeholder="Search your favorite drama..."
+            className="w-full pl-12 pr-12 py-4 bg-zinc-900/40 border border-white/[0.05] rounded-2xl text-sm placeholder-zinc-600 focus:outline-none focus:border-red-500/50 transition-all backdrop-blur-md"
             autoFocus
           />
           {query && (
             <button
               onClick={() => { setQuery(''); setSuggestions([]); setResults([]); setShowSuggestions(false); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-zinc-500 hover:text-white"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           )}
         </div>
 
-        {/* Dynamic Suggestions Dropdown */}
+        {/* Suggestions - Glassmorphism */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-zinc-900/95 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden z-[70] animate-in fade-in slide-in-from-top-2">
-            <div className="p-2 border-b border-zinc-800/50">
-                <span className="text-[10px] font-bold text-zinc-500 px-3 uppercase tracking-widest">Saran Pencarian</span>
-            </div>
+          <div className="absolute top-full left-0 right-0 mt-3 bg-zinc-900/90 backdrop-blur-2xl border border-white/[0.05] rounded-2xl shadow-2xl overflow-hidden z-[70]">
             {suggestions.map((item) => (
               <button
                 key={item.bookId}
                 onClick={() => { setQuery(item.bookName); handleSearch(item.bookName); }}
-                className="w-full text-left p-3 hover:bg-white/5 transition-colors flex items-center gap-3 group"
+                className="w-full text-left p-4 hover:bg-white/[0.03] transition-colors flex items-center gap-4 border-b border-white/[0.02] last:border-0"
               >
                 <div className="w-10 h-10 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0">
                     <img src={item.cover} alt="" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-white text-sm truncate group-hover:text-red-500 transition-colors">
-                    {item.bookName.trim()}
-                  </h4>
-                </div>
-                <ArrowRight size={14} className="text-zinc-600 group-hover:text-red-500" />
+                <h4 className="flex-1 font-medium text-[13px] text-zinc-200 truncate group-hover:text-red-500">
+                  {item.bookName.trim()}
+                </h4>
+                <ArrowRight size={14} className="text-zinc-700" />
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Main Content Area */}
+      {/* 2. Main Area */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-10 h-10 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div>
-          <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest animate-pulse">Mencari Drama...</p>
+        <div className="flex flex-col items-center justify-center py-32">
+          <div className="w-8 h-8 border-2 border-red-500/20 border-t-red-500 rounded-full animate-spin mb-4"></div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-600">Searching</p>
         </div>
       ) : (
         <>
-          {/* Search Results Grid */}
+          {/* Results Grid */}
           {results.length > 0 && (
-            <div className="animate-in fade-in duration-500">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-bold text-zinc-400">Hasil untuk "{query}"</h2>
-                <span className="text-[10px] bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full font-bold">{results.length} Drama</span>
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="flex items-end justify-between mb-6 px-1">
+                <h2 className="text-xl font-bold tracking-tight text-white">Results</h2>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{results.length} found</span>
               </div>
-              <div className="grid grid-cols-3 gap-x-3 gap-y-6">
+              <div className="grid grid-cols-3 gap-x-4 gap-y-8">
                 {results.map((drama) => (
                   <Link key={drama.bookId} to={`/watch/${drama.bookId}`} className="group block">
-                    <div className="aspect-[3/4] rounded-2xl overflow-hidden mb-2 bg-zinc-900 ring-1 ring-white/5 shadow-lg shadow-black/50">
+                    <div className="aspect-[3/4.5] rounded-xl overflow-hidden mb-3 bg-zinc-900 shadow-2xl transition-transform duration-500 group-hover:scale-[1.03]">
                       <img 
                         src={drama.cover} 
                         alt={drama.bookName} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover shadow-inner"
                       />
                     </div>
-                    <h3 className="text-[12px] font-bold line-clamp-2 leading-tight px-1 group-hover:text-red-500 transition-colors">
+                    {/* Judul Elegan - 2 Baris Maksimal */}
+                    <h3 className="text-[12px] font-bold leading-tight text-zinc-200 group-hover:text-red-500 transition-colors line-clamp-2 px-0.5">
                       {drama.bookName.trim()}
                     </h3>
                   </Link>
@@ -164,35 +161,40 @@ const Search = () => {
             </div>
           )}
 
-          {/* Empty State - Popular Searches */}
+          {/* Popular Searches - Initial State */}
           {!query && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="flex items-center gap-2 mb-5">
+            <div className="animate-in fade-in duration-700 px-1">
+              <div className="flex items-center gap-2 mb-8">
                 <Flame size={18} className="text-red-500" />
-                <h2 className="text-lg font-black tracking-tight">Lagi Rame Dicari</h2>
+                <h2 className="text-lg font-bold tracking-tight italic">Trending Now</h2>
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-6">
                 {popularDramas.map((drama, index) => (
                   <Link 
                     key={drama.bookId} 
                     to={`/watch/${drama.bookId}`} 
-                    className="flex items-center gap-4 p-3 bg-zinc-900/40 border border-zinc-800/50 rounded-2xl hover:bg-zinc-800/60 transition-all group shadow-sm"
+                    className="flex items-center gap-5 group"
                   >
                     <div className="relative flex-shrink-0">
-                      <img src={drama.cover} alt="" className="w-14 h-14 object-cover rounded-xl shadow-md group-hover:scale-105 transition-transform" />
-                      <div className={`absolute -top-2 -left-2 w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shadow-lg ${index < 3 ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-400'}`}>
-                        {index + 1}
+                      <div className="w-14 h-14 rounded-xl overflow-hidden shadow-xl">
+                        <img src={drama.cover} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       </div>
+                      <span className="absolute -top-2 -left-2 w-5 h-5 bg-white text-black text-[10px] font-black rounded flex items-center justify-center shadow-lg">
+                        {index + 1}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm truncate group-hover:text-red-500 transition-colors">
+                    <div className="flex-1 min-w-0 border-b border-white/[0.03] pb-4">
+                      <h3 className="font-bold text-[14px] text-zinc-200 truncate group-hover:text-red-500 transition-colors">
                         {drama.bookName.trim()}
                       </h3>
-                      <p className="text-[11px] text-zinc-500 mt-0.5 font-medium">{drama.playCount} penonton</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <TrendingUp size={10} className="text-zinc-600" />
+                        <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{drama.playCount} views</p>
+                      </div>
                     </div>
-                    <div className="p-2 rounded-full bg-zinc-800/50 group-hover:bg-red-500 transition-all group-hover:rotate-45">
-                        <ArrowRight size={14} className="text-zinc-500 group-hover:text-white" />
+                    <div className="opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0">
+                        <ArrowRight size={18} className="text-red-500" />
                     </div>
                   </Link>
                 ))}
@@ -200,19 +202,18 @@ const Search = () => {
             </div>
           )}
 
-          {/* Not Found State */}
+          {/* Not Found */}
           {query && results.length === 0 && !loading && (
-            <div className="text-center py-24 px-10 animate-in zoom-in duration-300">
-              <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6 border border-zinc-800">
-                 <SearchIcon size={32} className="text-zinc-700" />
+            <div className="flex flex-col items-center justify-center py-40 text-center">
+              <div className="w-16 h-16 bg-zinc-900/50 rounded-full flex items-center justify-center mb-6 border border-white/[0.05]">
+                 <SearchIcon size={24} className="text-zinc-700" />
               </div>
-              <h3 className="text-lg font-bold mb-2">Dramanya nggak ada, Bos</h3>
-              <p className="text-xs text-zinc-500 leading-relaxed">Coba cari pakai judul lain atau cek penulisan judulnya ya.</p>
+              <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-[0.2em]">No results found</h3>
               <button 
                 onClick={() => setQuery('')}
-                className="mt-8 px-6 py-2.5 bg-zinc-900 border border-zinc-800 rounded-full text-xs font-bold hover:bg-zinc-800 transition-colors"
+                className="mt-6 text-[10px] font-black text-red-500 uppercase tracking-widest border-b border-red-500/30 pb-1"
               >
-                Reset Pencarian
+                Clear Search
               </button>
             </div>
           )}
