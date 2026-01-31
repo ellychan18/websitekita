@@ -1,0 +1,16 @@
+{
+  "vouchers": [
+    {
+      "coupon": "BOS-CEO-2026",
+      "name": "Owner",
+      "created": "2026-01-30",
+      "expired": "2050-02-28"
+    },
+    {
+      "coupon": "TRIAL3D",
+      "name": "TRIAL 3 HARI",
+      "created": "2026-01-30",
+      "expired": "2026-02-02"
+    }
+  ]
+}

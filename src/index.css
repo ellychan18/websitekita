@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent-red: #e11d48;
+}
+
+* {
+  /* Ganti ke Plus Jakarta Sans biar lebih modern & clean buat UI mobile */
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  @apply bg-zinc-950 text-white antialiased selection:bg-red-500/30;
+  /* Mencegah overscroll putih di iOS */
+  background-color: #09090b; 
+}
+
+/* Scrollbar Hide yang lebih bersih */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Card Premium dengan efek Glassmorphism */
+  .card-premium {
+    @apply bg-zinc-900/40 backdrop-blur-md border border-white/5 rounded-[2rem] overflow-hidden;
+  }
+
+  /* Efek teks gradasi buat judul penting */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-zinc-500;
+  }
+}
+
+/* Animasi Halus pas ganti Page */
+.page-transition {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Styling Video Player agar UI-nya tidak bentrok */
+video::webkit-media-controls-panel {
+  @apply bg-gradient-to-t from-black/80 to-transparent;
+}
