@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Crown, Check, Zap, Star, ShieldCheck, Ticket, MessageCircle } from 'lucide-react';
+import { Crown, Check, Zap, ShieldCheck, Ticket } from 'lucide-react';
+// IMPORT LANGSUNG DARI FILE LOKAL
+import vipData from './userVip.json';
 
 const pricing = [
   { title: "VIP 1 Hari", price: "5.000", dur: "1 Hari", features: ["Buka Semua Episode", "Kualitas HD", "Tanpa Iklan"], tag: "" },
@@ -9,13 +11,11 @@ const pricing = [
   { title: "VIP 30 Hari", price: "50.000", dur: "30 Hari", features: ["Buka Semua Episode", "Kualitas HD", "Tanpa Iklan", "Mobile Access"], tag: "BEST SELLER", highlight: true },
 ];
 
-const VOUCHER_URL = "https://pastebin.com/raw/dtNPuFsL";
 const SESSION_KEY = '_app_session_v2';
 
 export default function Vip() {
   const [userData, setUserData] = useState<any>(null);
   const [licenseInput, setLicenseInput] = useState('');
-  const [isFetching, setIsFetching] = useState(false);
 
   // 1. Sinkronisasi status member saat halaman dibuka
   useEffect(() => {
@@ -39,63 +39,51 @@ export default function Vip() {
     checkSession();
   }, []);
 
-  // 2. Fungsi Redeem dengan Fetch Data Online
-  const handleRedeem = async () => {
-    // Proteksi: Jika sudah VIP, jangan izinkan redeem lagi
+  // 2. Fungsi Redeem Pakai JSON Lokal
+  const handleRedeem = () => {
+    // PROTEKSI: Jika sudah VIP, blokir fungsinya
     if (userData?.isVip) {
-      alert("VIP Kamu masih aktif, Bos! Habisin dulu masa aktifnya baru redeem lagi ya.");
+      alert("VIP Kamu masih aktif, Boskuh! Habisin dulu masa aktifnya baru redeem lagi ya.");
       return;
     }
 
     if (!licenseInput.trim()) return alert("Masukkan kode dulu Bos!");
 
-    setIsFetching(true);
-    try {
-      // Ambil data voucher terbaru dari Pastebin
-      const response = await fetch(VOUCHER_URL);
-      const data = await response.json();
-      
-      const found = data.vouchers.find(
-        (v: any) => v.coupon.trim().toUpperCase() === licenseInput.trim().toUpperCase()
-      );
+    // Cari kode di file userVip.json yang diimport di atas
+    const found = vipData.vouchers.find(
+      (v: any) => v.coupon.trim().toUpperCase() === licenseInput.trim().toUpperCase()
+    );
 
-      if (found) {
-        const expiryDate = new Date(found.expired);
-        const today = new Date();
+    if (found) {
+      const expiryDate = new Date(found.expired);
+      const today = new Date();
 
-        if (expiryDate > today) {
-          // Hitung selisih hari
-          const diffTime = Math.abs(expiryDate.getTime() - today.getTime());
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (expiryDate > today) {
+        const diffTime = Math.abs(expiryDate.getTime() - today.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-          // Simpan Session
-          const secureData = { 
-            uid: found.coupon, 
-            exp: found.expired,
-            usr: found.name || "Member"
-          };
-          
-          localStorage.setItem(SESSION_KEY, btoa(JSON.stringify(secureData)));
-          
-          setUserData({
-            name: found.name,
-            expired: found.expired,
-            isVip: true
-          });
+        // Simpan Session
+        const secureData = { 
+          uid: found.coupon, 
+          exp: found.expired,
+          usr: found.name || "Member"
+        };
+        
+        localStorage.setItem(SESSION_KEY, btoa(JSON.stringify(secureData)));
+        
+        setUserData({
+          name: found.name,
+          expired: found.expired,
+          isVip: true
+        });
 
-          alert(`Berlangganan ${diffDays} Hari, Telah Berhasil!`);
-          setLicenseInput('');
-        } else {
-          alert("Waduh, kode ini sudah EXPIRED Bos!");
-        }
+        alert(`Berlangganan ${diffDays} Hari, Telah Berhasil! Gacor Bos!`);
+        setLicenseInput('');
       } else {
-        alert("KODE SALAH! Cek lagi atau hubungi admin @leviiwashere");
+        alert("Waduh, kode ini sudah EXPIRED Bos!");
       }
-    } catch (error) {
-      alert("Gagal mengambil data voucher. Cek koneksi internet, Bos!");
-      console.error(error);
-    } finally {
-      setIsFetching(false);
+    } else {
+      alert("KODE SALAH! Cek lagi atau hubungi admin @leviiwashere");
     }
   };
 
@@ -133,7 +121,7 @@ export default function Vip() {
         </div>
       </div>
 
-      {/* 2. INPUT REDEEM (FIXED OVERFLOW & LOGIC) */}
+      {/* 2. INPUT REDEEM */}
       <div className="mb-12 relative px-1">
         <div className="absolute -inset-1 bg-gradient-to-r from-yellow-600/10 to-orange-600/10 rounded-[2.2rem] blur-xl opacity-50 transition-opacity"></div>
         <div className="relative bg-zinc-900/50 border border-white/10 rounded-3xl p-1.5 flex items-center backdrop-blur-xl shadow-2xl overflow-hidden">
@@ -144,21 +132,21 @@ export default function Vip() {
             type="text" 
             placeholder={userData?.isVip ? "VIP IS ACTIVE" : "KODE VOUCHER"}
             value={licenseInput}
-            disabled={userData?.isVip || isFetching}
+            disabled={userData?.isVip}
             onChange={(e) => setLicenseInput(e.target.value.toUpperCase())}
             onKeyDown={(e) => e.key === 'Enter' && handleRedeem()}
             className="flex-1 min-w-0 bg-transparent px-3 py-4 text-[12px] font-black tracking-[0.2em] text-yellow-500 outline-none placeholder:text-zinc-700 placeholder:tracking-normal disabled:opacity-50"
           />
           <button 
             onClick={handleRedeem} 
-            disabled={userData?.isVip || isFetching}
+            disabled={userData?.isVip}
             className={`flex-shrink-0 px-5 md:px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
-              userData?.isVip || isFetching
-              ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-              : 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:scale-95'
+              userData?.isVip
+              ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed opacity-50'
+              : 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:scale-95 hover:bg-yellow-400'
             }`}
           >
-            {isFetching ? 'Checking...' : userData?.isVip ? 'VIP Active' : 'Redeem'}
+            {userData?.isVip ? 'VIP Active' : 'Redeem'}
           </button>
         </div>
         <p className="text-[9px] text-center mt-4 text-zinc-600 font-bold uppercase tracking-[0.3em] opacity-60">
@@ -166,7 +154,7 @@ export default function Vip() {
         </p>
       </div>
 
-      {/* 3. PRICING & PROMO */}
+      {/* 3. PRICING */}
       <div className="text-center mb-12">
         <div className="inline-block bg-yellow-500/10 px-4 py-1 rounded-full mb-4 border border-yellow-500/20">
             <h3 className="text-yellow-500 text-[9px] font-black uppercase tracking-[0.3em]">Premium Experience</h3>
@@ -217,11 +205,10 @@ export default function Vip() {
         ))}
       </div>
       
-      {/* FOOTER */}
       <div className="text-center opacity-40 hover:opacity-100 transition-opacity">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] mb-2">Developed for MyDracin</p>
         <p className="text-[8px] font-bold text-zinc-600 uppercase">Contact Admin: @leviiwashere</p>
       </div>
     </div>
   );
-            }
+}
