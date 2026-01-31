@@ -21,7 +21,6 @@ const Watch = () => {
 
   const SESSION_KEY = '_app_session_v2';
 
-  // FUNGSI CEK STATUS & AMBIL INFO EXPIRED
   const getSubStatus = () => {
     const saved = localStorage.getItem(SESSION_KEY);
     if (!saved) return false;
@@ -74,23 +73,17 @@ const Watch = () => {
     if (foundVoucher) {
       const expiry = new Date(foundVoucher.expired);
       const today = new Date();
-
       if (expiry > today) {
-        // Hitung selisih hari
         const diffTime = Math.abs(expiry.getTime() - today.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
         const secureData = { 
           uid: foundVoucher.coupon, 
           exp: foundVoucher.expired,
           usr: foundVoucher.name || "Member"
         };
-        
         localStorage.setItem(SESSION_KEY, btoa(JSON.stringify(secureData)));
         setIsSubscribed(true);
         setShowLockPopup(false);
-        
-        // UPDATE NOTIFIKASI SESUAI REQUEST BOSKUH
         alert(`Berlangganan ${diffDays} Hari, Telah Berhasil!`);
       } else { 
         alert("KODE EXPIRED!"); 
@@ -101,9 +94,22 @@ const Watch = () => {
   };
 
   const handleChapterChange = (chapterIndex: number) => {
+    // Validasi agar tidak melewati batas jumlah episode
+    if (chapterIndex < 1 || chapterIndex > chapters.length) return;
+    
     if (!isSubscribed) { setShowLockPopup(true); return; }
     setCurrentChapter(chapterIndex);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // --- FUNGSI AUTO NEXT ---
+  const handleAutoNext = () => {
+    if (currentChapter < chapters.length) {
+      console.log("Video berakhir, pindah ke episode berikutnya...");
+      handleChapterChange(currentChapter + 1);
+    } else {
+      alert("Boskuh, ini sudah episode terakhir!");
+    }
   };
 
   if (loading) return (
@@ -120,14 +126,14 @@ const Watch = () => {
         <title>{`${watchData.bookName} Ep ${currentChapter} - MyDracin`}</title>
       </Helmet>
 
-      {/* HEADER PC & HP */}
+      {/* HEADER */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/80 backdrop-blur-xl border-b border-white/5">
         <div className="flex items-center h-16 px-4 max-w-7xl mx-auto">
           <button onClick={() => navigate('/')} className="p-2 hover:bg-zinc-900 rounded-full transition-all">
             <ArrowLeft size={22} />
           </button>
           <div className="flex-1 text-center">
-            <h1 className="font-black text-[10px] md:text-xs uppercase tracking-[0.3em] line-clamp-1 italic">
+            <h1 className="font-black text-[10px] md:text-xs uppercase tracking-[0.3em] line-clamp-1 italic text-white">
               Now Playing: {watchData.bookName}
             </h1>
           </div>
@@ -139,11 +145,9 @@ const Watch = () => {
 
       <div className="pt-24 px-4 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* KOLOM KIRI: PLAYER & INFO */}
           <div className="lg:col-span-8 space-y-6">
             
-            {/* STATUS VIP INFO */}
+            {/* STATUS INFO */}
             <div className="flex items-center justify-between bg-zinc-900/50 p-4 rounded-3xl border border-white/5 shadow-inner">
               <div className="flex items-center gap-3">
                 <div className={`w-2.5 h-2.5 rounded-full animate-pulse ${isSubscribed ? 'bg-yellow-500 shadow-[0_0_10px_#eab308]' : 'bg-red-600 shadow-[0_0_10px_#dc2626]'}`} />
@@ -162,10 +166,10 @@ const Watch = () => {
               )}
             </div>
 
-            {/* VIDEO FRAME */}
+            {/* VIDEO PLAYER AREA */}
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-red-600/20 to-yellow-600/20 rounded-[2.5rem] blur-2xl opacity-50"></div>
-              <div className="relative bg-zinc-900 rounded-[2.5rem] p-2 border border-white/10">
+              <div className="relative bg-zinc-900 rounded-[2.5rem] p-2 border border-white/10 overflow-hidden">
                 <div className="rounded-[2rem] overflow-hidden bg-black relative aspect-[9/16] md:aspect-video shadow-2xl">
                   {!isSubscribed && (
                     <div className="absolute inset-0 bg-black/90 backdrop-blur-xl z-40 flex flex-col items-center justify-center p-8 text-center">
@@ -173,16 +177,22 @@ const Watch = () => {
                          <Lock size={40} className="text-red-600 animate-bounce" />
                       </div>
                       <h2 className="text-xl font-black uppercase tracking-tighter mb-2 italic">Akses Terkunci</h2>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase mb-8 tracking-[0.2em] leading-relaxed">Gunakan Voucher VIP untuk menonton <br/> episode ini dan seterusnya.</p>
-                      <button onClick={() => setShowLockPopup(true)} className="bg-red-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-red-600/20 hover:scale-105 active:scale-95 transition-all">Redeem Voucher</button>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase mb-8 tracking-[0.2em] leading-relaxed text-balance">
+                        Gunakan Voucher VIP untuk menonton episode ini dan seterusnya.
+                      </p>
+                      <button onClick={() => setShowLockPopup(true)} className="bg-red-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-red-600/20 hover:scale-105 active:scale-95 transition-all">
+                        Redeem Voucher
+                      </button>
                     </div>
                   )}
+                  {/* UPDATE: ADDED onEnded FOR AUTO NEXT */}
                   <video
                     key={watchData.videoUrl}
                     src={isSubscribed ? watchData.videoUrl : ""}
                     poster={watchData.bookCover}
                     controls={isSubscribed}
                     autoPlay={isSubscribed}
+                    onEnded={handleAutoNext}
                     playsInline
                     className="w-full h-full object-contain"
                   />
@@ -190,12 +200,12 @@ const Watch = () => {
               </div>
             </div>
 
-            {/* NAVIGASI TOMBOL NEXT GAHAR */}
+            {/* CONTROLS */}
             <div className="flex gap-4">
               <button 
                 onClick={() => handleChapterChange(currentChapter - 1)} 
                 disabled={currentChapter <= 1} 
-                className="w-16 h-16 bg-zinc-900 border border-white/5 rounded-[1.5rem] flex items-center justify-center text-zinc-500 hover:text-white disabled:opacity-10 active:scale-90 transition-all"
+                className="w-16 h-16 bg-zinc-900 border border-white/5 rounded-[1.5rem] flex items-center justify-center text-zinc-500 hover:text-white disabled:opacity-10 active:scale-90 transition-all shadow-xl"
               >
                 <ChevronLeft size={32} />
               </button>
@@ -206,17 +216,16 @@ const Watch = () => {
                 className="flex-1 h-16 relative group overflow-hidden rounded-[1.5rem] active:scale-[0.98] transition-all disabled:opacity-20"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-600" />
-                <div className="relative flex items-center justify-center gap-4 text-white">
+                <div className="relative flex items-center justify-center gap-4 text-white shadow-2xl">
                   <span className="font-black text-sm uppercase tracking-[0.2em] italic">Lanjut Episode</span>
                   <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-md group-hover:translate-x-2 transition-transform">
                     <ChevronRight size={20} />
                   </div>
                 </div>
-                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
               </button>
             </div>
 
-            {/* SINOPSIS */}
+            {/* SYNOPSIS */}
             <div className="p-8 bg-zinc-900/30 rounded-[2.5rem] border border-white/5">
                 <div className="flex items-center gap-2 mb-4 text-zinc-500 uppercase font-black text-[10px] tracking-[0.3em]">
                   <AlignLeft size={16} className="text-red-600" /> Deskripsi Cerita
@@ -228,7 +237,7 @@ const Watch = () => {
             </div>
           </div>
 
-          {/* KOLOM KANAN: EPISODES */}
+          {/* PLAYLIST SECTION */}
           <div className="lg:col-span-4">
             <div className="bg-zinc-900/50 p-6 rounded-[2.5rem] border border-white/5 sticky top-24">
                <div className="flex items-center justify-between mb-6 px-2">
@@ -237,7 +246,7 @@ const Watch = () => {
                   </div>
                   <span className="bg-white/5 px-3 py-1 rounded-full text-[10px] font-black text-zinc-500 uppercase tracking-tighter">{chapters.length} Episodes</span>
                </div>
-               <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-4 gap-2.5 max-h-[60vh] overflow-y-auto pr-2 no-scrollbar">
+               <div className="grid grid-cols-4 gap-2.5 max-h-[60vh] overflow-y-auto pr-2 no-scrollbar">
                   {chapters.map((chapter) => {
                     const ep = chapter.chapterIndex + 1;
                     const isActive = currentChapter === ep;
@@ -262,12 +271,11 @@ const Watch = () => {
         </div>
       </div>
 
-      {/* POPUP REDEEM PREMIUM */}
+      {/* POPUP REDEEM */}
       {showLockPopup && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl flex items-center justify-center z-[200] p-6">
           <div className="bg-zinc-900 border border-white/10 rounded-[3rem] w-full max-w-sm overflow-hidden shadow-[0_0_100px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-300">
             <div className="h-40 bg-gradient-to-br from-yellow-500 to-orange-700 flex items-center justify-center relative">
-               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] opacity-20"></div>
                <div className="relative bg-black/30 p-5 rounded-full backdrop-blur-xl border border-white/20 shadow-2xl">
                   <Ticket size={48} className="text-white" />
                </div>
