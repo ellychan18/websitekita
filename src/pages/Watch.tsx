@@ -7,7 +7,9 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../store/language';
 import { Helmet } from 'react-helmet-async';
-import vipData from './userVip.json';
+
+const VOUCHER_URL = "https://pastebin.com/raw/dtNPuFsL";
+const SESSION_KEY = '_app_session_v2';
 
 const Watch = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,8 +20,7 @@ const Watch = () => {
   const [loading, setLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [expiryDate, setExpiryDate] = useState("");
-
-  const SESSION_KEY = '_app_session_v2';
+  const [isFetchingVoucher, setIsFetchingVoucher] = useState(false);
 
   const getSubStatus = () => {
     const saved = localStorage.getItem(SESSION_KEY);
@@ -65,50 +66,60 @@ const Watch = () => {
     fetchData();
   }, [id, currentChapter, lang]);
 
-  const handleRedeem = () => {
-    const foundVoucher = vipData.vouchers.find(
-      (v: any) => v.coupon.trim() === licenseCode.trim()
-    );
+  // UPDATE: REDEEM PAKAI DATA ONLINE PASTEBIN
+  const handleRedeem = async () => {
+    if (!licenseCode.trim()) return alert("Masukkan kode Bos!");
+    
+    setIsFetchingVoucher(true);
+    try {
+      const response = await fetch(VOUCHER_URL);
+      const data = await response.json();
+      
+      const found = data.vouchers.find(
+        (v: any) => v.coupon.trim().toUpperCase() === licenseCode.trim().toUpperCase()
+      );
 
-    if (foundVoucher) {
-      const expiry = new Date(foundVoucher.expired);
-      const today = new Date();
-      if (expiry > today) {
-        const diffTime = Math.abs(expiry.getTime() - today.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const secureData = { 
-          uid: foundVoucher.coupon, 
-          exp: foundVoucher.expired,
-          usr: foundVoucher.name || "Member"
-        };
-        localStorage.setItem(SESSION_KEY, btoa(JSON.stringify(secureData)));
-        setIsSubscribed(true);
-        setShowLockPopup(false);
-        alert(`Berlangganan ${diffDays} Hari, Telah Berhasil!`);
+      if (found) {
+        const expiry = new Date(found.expired);
+        const today = new Date();
+        
+        if (expiry > today) {
+          const diffTime = Math.abs(expiry.getTime() - today.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          const secureData = { 
+            uid: found.coupon, 
+            exp: found.expired,
+            usr: found.name || "Member"
+          };
+          
+          localStorage.setItem(SESSION_KEY, btoa(JSON.stringify(secureData)));
+          setIsSubscribed(true);
+          setShowLockPopup(false);
+          alert(`Berlangganan ${diffDays} Hari, Telah Berhasil!`);
+        } else { 
+          alert("KODE EXPIRED!"); 
+        }
       } else { 
-        alert("KODE EXPIRED!"); 
+        alert("KODE SALAH!"); 
       }
-    } else { 
-      alert("KODE SALAH!"); 
+    } catch (e) {
+      alert("Gagal konek ke server voucher!");
+    } finally {
+      setIsFetchingVoucher(false);
     }
   };
 
   const handleChapterChange = (chapterIndex: number) => {
-    // Validasi agar tidak melewati batas jumlah episode
     if (chapterIndex < 1 || chapterIndex > chapters.length) return;
-    
     if (!isSubscribed) { setShowLockPopup(true); return; }
     setCurrentChapter(chapterIndex);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // --- FUNGSI AUTO NEXT ---
   const handleAutoNext = () => {
     if (currentChapter < chapters.length) {
-      console.log("Video berakhir, pindah ke episode berikutnya...");
       handleChapterChange(currentChapter + 1);
-    } else {
-      alert("Boskuh, ini sudah episode terakhir!");
     }
   };
 
@@ -132,7 +143,7 @@ const Watch = () => {
           <button onClick={() => navigate('/')} className="p-2 hover:bg-zinc-900 rounded-full transition-all">
             <ArrowLeft size={22} />
           </button>
-          <div className="flex-1 text-center">
+          <div className="flex-1 text-center px-4">
             <h1 className="font-black text-[10px] md:text-xs uppercase tracking-[0.3em] line-clamp-1 italic text-white">
               Now Playing: {watchData.bookName}
             </h1>
@@ -185,7 +196,6 @@ const Watch = () => {
                       </button>
                     </div>
                   )}
-                  {/* UPDATE: ADDED onEnded FOR AUTO NEXT */}
                   <video
                     key={watchData.videoUrl}
                     src={isSubscribed ? watchData.videoUrl : ""}
@@ -225,7 +235,7 @@ const Watch = () => {
               </button>
             </div>
 
-            {/* SYNOPSIS */}
+            {/* SINOPSIS */}
             <div className="p-8 bg-zinc-900/30 rounded-[2.5rem] border border-white/5">
                 <div className="flex items-center gap-2 mb-4 text-zinc-500 uppercase font-black text-[10px] tracking-[0.3em]">
                   <AlignLeft size={16} className="text-red-600" /> Deskripsi Cerita
@@ -271,7 +281,7 @@ const Watch = () => {
         </div>
       </div>
 
-      {/* POPUP REDEEM */}
+      {/* POPUP REDEEM (UPDATED LOGIC) */}
       {showLockPopup && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl flex items-center justify-center z-[200] p-6">
           <div className="bg-zinc-900 border border-white/10 rounded-[3rem] w-full max-w-sm overflow-hidden shadow-[0_0_100px_rgba(0,0,0,1)] animate-in zoom-in-95 duration-300">
@@ -291,13 +301,15 @@ const Watch = () => {
                   placeholder="VOUCHER CODE"
                   value={licenseCode}
                   onChange={(e) => setLicenseCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === 'Enter' && handleRedeem()}
                   className="w-full bg-black border-2 border-white/5 rounded-2xl py-5 text-center text-xs font-black tracking-[0.4em] text-yellow-500 outline-none focus:border-yellow-500/50 transition-all placeholder:text-zinc-800"
                 />
                 <button 
                   onClick={handleRedeem}
-                  className="w-full bg-white text-black py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-yellow-500 transition-all active:scale-95"
+                  disabled={isFetchingVoucher}
+                  className="w-full bg-white text-black py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-yellow-500 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  Activate Access
+                  {isFetchingVoucher ? "Checking..." : "Activate Access"}
                 </button>
               </div>
               <div className="mt-10 pt-8 border-t border-white/5">
