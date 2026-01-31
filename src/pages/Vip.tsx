@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Crown, Check, Zap, Star, ShieldCheck, Ticket, MessageCircle } from 'lucide-react';
-// Import data voucher
-import vipData from './userVip.json';
 
 const pricing = [
   { title: "VIP 1 Hari", price: "5.000", dur: "1 Hari", features: ["Buka Semua Episode", "Kualitas HD", "Tanpa Iklan"], tag: "" },
@@ -11,58 +9,93 @@ const pricing = [
   { title: "VIP 30 Hari", price: "50.000", dur: "30 Hari", features: ["Buka Semua Episode", "Kualitas HD", "Tanpa Iklan", "Mobile Access"], tag: "BEST SELLER", highlight: true },
 ];
 
+const VOUCHER_URL = "https://pastebin.com/raw/dtNPuFsL";
+const SESSION_KEY = '_app_session_v2';
+
 export default function Vip() {
   const [userData, setUserData] = useState<any>(null);
   const [licenseInput, setLicenseInput] = useState('');
-  
-  const SESSION_KEY = '_app_session_v2';
+  const [isFetching, setIsFetching] = useState(false);
 
+  // 1. Sinkronisasi status member saat halaman dibuka
   useEffect(() => {
-    const saved = localStorage.getItem(SESSION_KEY);
-    if (saved) {
-      try {
-        const decoded = JSON.parse(atob(saved));
-        const found = vipData.vouchers.find((v: any) => v.coupon === decoded.uid);
-        if (found) {
-          setUserData({ 
-            ...found, 
-            isVip: new Date(found.expired) > new Date() 
+    const checkSession = () => {
+      const saved = localStorage.getItem(SESSION_KEY);
+      if (saved) {
+        try {
+          const decoded = JSON.parse(atob(saved));
+          const isExpired = new Date(decoded.exp) < new Date();
+          
+          setUserData({
+            name: decoded.usr,
+            expired: decoded.exp,
+            isVip: !isExpired
           });
+        } catch (e) {
+          console.error("Session Error");
         }
-      } catch (e) {
-        console.error("Session Error");
       }
-    }
+    };
+    checkSession();
   }, []);
 
-  const handleRedeem = () => {
+  // 2. Fungsi Redeem dengan Fetch Data Online
+  const handleRedeem = async () => {
+    // Proteksi: Jika sudah VIP, jangan izinkan redeem lagi
+    if (userData?.isVip) {
+      alert("VIP Kamu masih aktif, Bos! Habisin dulu masa aktifnya baru redeem lagi ya.");
+      return;
+    }
+
     if (!licenseInput.trim()) return alert("Masukkan kode dulu Bos!");
 
-    const found = vipData.vouchers.find((v: any) => v.coupon.trim() === licenseInput.trim());
-    
-    if (found) {
-      const expiryDate = new Date(found.expired);
-      const today = new Date();
+    setIsFetching(true);
+    try {
+      // Ambil data voucher terbaru dari Pastebin
+      const response = await fetch(VOUCHER_URL);
+      const data = await response.json();
+      
+      const found = data.vouchers.find(
+        (v: any) => v.coupon.trim().toUpperCase() === licenseInput.trim().toUpperCase()
+      );
 
-      if (expiryDate > today) {
-        const diffTime = Math.abs(expiryDate.getTime() - today.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (found) {
+        const expiryDate = new Date(found.expired);
+        const today = new Date();
 
-        const secureData = { 
-          uid: found.coupon, 
-          exp: found.expired,
-          usr: found.name || "Member"
-        };
-        
-        localStorage.setItem(SESSION_KEY, btoa(JSON.stringify(secureData)));
-        setUserData({ ...found, isVip: true });
-        alert(`Berlangganan ${diffDays} Hari, Telah Berhasil!`);
-        setLicenseInput('');
+        if (expiryDate > today) {
+          // Hitung selisih hari
+          const diffTime = Math.abs(expiryDate.getTime() - today.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          // Simpan Session
+          const secureData = { 
+            uid: found.coupon, 
+            exp: found.expired,
+            usr: found.name || "Member"
+          };
+          
+          localStorage.setItem(SESSION_KEY, btoa(JSON.stringify(secureData)));
+          
+          setUserData({
+            name: found.name,
+            expired: found.expired,
+            isVip: true
+          });
+
+          alert(`Berlangganan ${diffDays} Hari, Telah Berhasil!`);
+          setLicenseInput('');
+        } else {
+          alert("Waduh, kode ini sudah EXPIRED Bos!");
+        }
       } else {
-        alert("Waduh, kode ini sudah EXPIRED Bos!");
+        alert("KODE SALAH! Cek lagi atau hubungi admin @leviiwashere");
       }
-    } else {
-      alert("KODE SALAH! Cek lagi atau hubungi admin @leviiwashere");
+    } catch (error) {
+      alert("Gagal mengambil data voucher. Cek koneksi internet, Bos!");
+      console.error(error);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -100,34 +133,40 @@ export default function Vip() {
         </div>
       </div>
 
-      {/* 2. INPUT REDEEM GACOR (FIXED OVERFLOW) */}
+      {/* 2. INPUT REDEEM (FIXED OVERFLOW & LOGIC) */}
       <div className="mb-12 relative px-1">
-        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-600/10 to-orange-600/10 rounded-[2.2rem] blur-xl opacity-50 group-focus-within:opacity-100 transition-opacity"></div>
+        <div className="absolute -inset-1 bg-gradient-to-r from-yellow-600/10 to-orange-600/10 rounded-[2.2rem] blur-xl opacity-50 transition-opacity"></div>
         <div className="relative bg-zinc-900/50 border border-white/10 rounded-3xl p-1.5 flex items-center backdrop-blur-xl shadow-2xl overflow-hidden">
           <div className="pl-4 text-yellow-500/50 flex-shrink-0">
             <Ticket size={18} />
           </div>
           <input 
             type="text" 
-            placeholder="KODE VOUCHER"
+            placeholder={userData?.isVip ? "VIP IS ACTIVE" : "KODE VOUCHER"}
             value={licenseInput}
+            disabled={userData?.isVip || isFetching}
             onChange={(e) => setLicenseInput(e.target.value.toUpperCase())}
             onKeyDown={(e) => e.key === 'Enter' && handleRedeem()}
-            className="flex-1 min-w-0 bg-transparent px-3 py-4 text-[12px] font-black tracking-[0.2em] text-yellow-500 outline-none placeholder:text-zinc-700 placeholder:tracking-normal placeholder:font-bold"
+            className="flex-1 min-w-0 bg-transparent px-3 py-4 text-[12px] font-black tracking-[0.2em] text-yellow-500 outline-none placeholder:text-zinc-700 placeholder:tracking-normal disabled:opacity-50"
           />
           <button 
             onClick={handleRedeem} 
-            className="flex-shrink-0 bg-yellow-500 hover:bg-yellow-400 text-black px-5 md:px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-yellow-500/20 active:scale-95 transition-all"
+            disabled={userData?.isVip || isFetching}
+            className={`flex-shrink-0 px-5 md:px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${
+              userData?.isVip || isFetching
+              ? 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
+              : 'bg-yellow-500 text-black shadow-lg shadow-yellow-500/20 active:scale-95'
+            }`}
           >
-            Redeem
+            {isFetching ? 'Checking...' : userData?.isVip ? 'VIP Active' : 'Redeem'}
           </button>
         </div>
         <p className="text-[9px] text-center mt-4 text-zinc-600 font-bold uppercase tracking-[0.3em] opacity-60">
-          Masukkan kode untuk akses Premium
+          {userData?.isVip ? "Selamat menikmati fitur premium!" : "Masukkan kode untuk akses Premium"}
         </p>
       </div>
 
-      {/* 3. HERO PROMO */}
+      {/* 3. PRICING & PROMO */}
       <div className="text-center mb-12">
         <div className="inline-block bg-yellow-500/10 px-4 py-1 rounded-full mb-4 border border-yellow-500/20">
             <h3 className="text-yellow-500 text-[9px] font-black uppercase tracking-[0.3em]">Premium Experience</h3>
@@ -135,7 +174,6 @@ export default function Vip() {
         <h1 className="text-4xl font-black uppercase tracking-tighter leading-[0.9] mb-4">PILIH PAKET<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-400 to-zinc-700">SESUAI KEINGINAN</span></h1>
       </div>
 
-      {/* 4. PRICING LIST */}
       <div className="space-y-5 mb-20">
         {pricing.map((p, i) => (
           <div key={i} className={`relative group overflow-hidden rounded-[2.5rem] transition-all duration-500 ${p.highlight ? 'bg-zinc-800' : 'bg-zinc-900/40 border border-white/5'}`}>
@@ -178,34 +216,12 @@ export default function Vip() {
           </div>
         ))}
       </div>
-
-      {/* 5. BENEFITS */}
-      <div className="grid grid-cols-1 gap-4 mb-16">
-          <div className="flex gap-4 p-6 bg-zinc-900/40 rounded-[2rem] border border-white/5 items-center">
-            <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 text-yellow-500">
-                <Star size={24} />
-            </div>
-            <div>
-                <h4 className="font-black text-xs uppercase tracking-widest mb-1">Ultra HD Quality</h4>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight">Visual Jernih Tanpa Batas</p>
-            </div>
-          </div>
-          <div className="flex gap-4 p-6 bg-zinc-900/40 rounded-[2rem] border border-white/5 items-center">
-            <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center border border-white/5 text-yellow-500">
-                <ShieldCheck size={24} />
-            </div>
-            <div>
-                <h4 className="font-black text-xs uppercase tracking-widest mb-1">Safe & Secure</h4>
-                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight">Akses Legal & Terjamin</p>
-            </div>
-          </div>
-      </div>
-
+      
+      {/* FOOTER */}
       <div className="text-center opacity-40 hover:opacity-100 transition-opacity">
         <p className="text-[9px] font-black uppercase tracking-[0.4em] mb-2">Developed for MyDracin</p>
         <p className="text-[8px] font-bold text-zinc-600 uppercase">Contact Admin: @leviiwashere</p>
       </div>
-
     </div>
   );
             }
