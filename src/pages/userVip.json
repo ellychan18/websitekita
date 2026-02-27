@@ -17,6 +17,12 @@
       "name": "RUSLI",
       "created": "2026-01-31",
       "expired": "2026-02-28"
+    },
+    {
+      "coupon": "FREECODE",
+      "name": "FREE CODE",
+      "created": "2026-02-27",
+      "expired": "2026-03-27"
     }
   ]
 }
